@@ -1,7 +1,7 @@
 export const geminiService = {
   generateCompletion: async (prompt: string): Promise<string> => {
     // Simulate API network latency
-    await new Promise((resolve) => setTimeout(resolve, 1400));
+    await new Promise<void>((resolve) => setTimeout(resolve, 1400));
     
     const responses = [
       "Hello! I am Gemini 1.5 Pro. I specialize in multimodal analysis and processing massive context windows.",

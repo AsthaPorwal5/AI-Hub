@@ -1,7 +1,7 @@
 export const claudeService = {
   generateCompletion: async (prompt: string): Promise<string> => {
     // Simulate API network latency
-    await new Promise((resolve) => setTimeout(resolve, 1100));
+    await new Promise<void>((resolve) => setTimeout(resolve, 1100));
     
     const responses = [
       "I am Claude 3.5 Sonnet by Anthropic. I aim to provide helpful, honest, and harmless responses with strong writing clarity.",

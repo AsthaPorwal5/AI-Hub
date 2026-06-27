@@ -12,7 +12,8 @@ export type ScreenState =
   | 'tools' 
   | 'history' 
   | 'profile' 
-  | 'subscription';
+  | 'subscription'
+  | 'modelSelection';
 
 export interface Message {
   id: string;
