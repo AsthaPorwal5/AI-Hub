@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { Colors } from '../../../theme/colors';
 import GlassInput from '../../../components/inputs/GlassInput';
 import PrimaryButton from '../../../components/buttons/PrimaryButton';
+import { signUp } from '../../../services/supabase';
 
 interface SignupProps {
-  onSignupSuccess: () => void;
+  onSignupSuccess: (email: string) => void;
   onNavigateToLogin: () => void;
 }
 
@@ -13,6 +14,26 @@ export const Signup: React.FC<SignupProps> = ({ onSignupSuccess, onNavigateToLog
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async () => {
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      Alert.alert('Validation Error', 'Please fill in all fields.');
+      return;
+    }
+    setLoading(true);
+    console.log("name :", name.trim());
+    console.log("email :", email.trim());
+    console.log("password :", password);
+    try {
+      await signUp(email.trim(), password, name.trim());
+      onSignupSuccess(email.trim());
+    } catch (err: any) {
+      Alert.alert('Signup Failed', err.message || 'An error occurred during signup.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -52,8 +73,9 @@ export const Signup: React.FC<SignupProps> = ({ onSignupSuccess, onNavigateToLog
             
             <PrimaryButton
               title="Continue to Verify"
-              onPress={onSignupSuccess}
+              onPress={handleSignup}
               style={styles.signupButton}
+              loading={loading}
             />
           </View>
           
