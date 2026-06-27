@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { Colors } from '../../../theme/colors';
 import GlassInput from '../../../components/inputs/GlassInput';
 import PrimaryButton from '../../../components/buttons/PrimaryButton';
+import { signIn } from '../../../services/supabase';
 
 interface LoginProps {
   onLoginSuccess: () => void;
@@ -12,6 +13,23 @@ interface LoginProps {
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToSignup }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Validation Error', 'Please enter both your email and password.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await signIn(email.trim(), password);
+      onLoginSuccess();
+    } catch (err: any) {
+      Alert.alert('Login Failed', err.message || 'An error occurred during login.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -47,8 +65,9 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToSignup
             
             <PrimaryButton
               title="Sign In"
-              onPress={onLoginSuccess}
+              onPress={handleLogin}
               style={styles.loginButton}
+              loading={loading}
             />
           </View>
           

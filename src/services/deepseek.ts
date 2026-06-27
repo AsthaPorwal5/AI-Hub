@@ -1,7 +1,7 @@
 export const deepseekService = {
   generateCompletion: async (prompt: string): Promise<string> => {
     // Simulate API network latency
-    await new Promise((resolve) => setTimeout(resolve, 950));
+    await new Promise<void>((resolve) => setTimeout(resolve, 950));
     
     const responses = [
       "Hello! I am DeepSeek-V3. I represent a highly cost-efficient, high-speed Mixture-of-Experts reasoning model.",

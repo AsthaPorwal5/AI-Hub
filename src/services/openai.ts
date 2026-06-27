@@ -1,7 +1,7 @@
 export const openaiService = {
   generateCompletion: async (prompt: string): Promise<string> => {
     // Simulate API network latency
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    await new Promise<void>((resolve) => setTimeout(resolve, 1200));
     
     const responses = [
       "I'm ChatGPT-4o. How can I assist you with code, logic, or writing today?",

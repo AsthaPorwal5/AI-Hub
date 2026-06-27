@@ -1,20 +1,50 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { Colors } from '../../theme/colors';
+import { getCurrentUser, signOut } from '../../services/supabase';
 
 interface ProfileProps {
   onSignOut: () => void;
 }
 
 export const Profile: React.FC<ProfileProps> = ({ onSignOut }) => {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+      } catch (err) {
+        console.error('Error fetching user:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      onSignOut();
+    } catch (err: any) {
+      Alert.alert('Sign Out Failed', err.message || 'An error occurred during sign out.');
+    }
+  };
+
+  const emailDisplay = user?.email || 'Not Signed In';
+  const nameDisplay = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'AI Hub User';
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* User Card */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarLarge} />
-          <Text style={styles.userName}>Alex Mercer</Text>
-          <Text style={styles.userEmail}>alex.mercer@aihub.app</Text>
+          <Text style={styles.userName}>{loading ? 'Loading...' : nameDisplay}</Text>
+          <Text style={styles.userEmail}>{loading ? '...' : emailDisplay}</Text>
           <View style={styles.badgePremium}>
             <Text style={styles.badgeText}>PRO PLAN ACTIVE</Text>
           </View>
@@ -49,7 +79,7 @@ export const Profile: React.FC<ProfileProps> = ({ onSignOut }) => {
         </View>
 
         {/* Sign Out Button */}
-        <TouchableOpacity style={styles.signOutBtn} onPress={onSignOut} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} activeOpacity={0.8}>
           <Text style={styles.signOutText}>Sign Out from Account</Text>
         </TouchableOpacity>
       </ScrollView>

@@ -1,7 +1,7 @@
 export const imageService = {
   generateImage: async (prompt: string): Promise<any> => {
     // Simulate generation delay
-    await new Promise((resolve) => setTimeout(resolve, 2500));
+    await new Promise<void>((resolve) => setTimeout(resolve, 2500));
     
     // Choose which asset to show based on keywords in prompt, or pick one randomly
     const query = prompt.toLowerCase();

@@ -1,16 +1,48 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { Colors } from '../../../theme/colors';
 import GlassInput from '../../../components/inputs/GlassInput';
 import PrimaryButton from '../../../components/buttons/PrimaryButton';
+import { verifyOTP, resendOTP } from '../../../services/supabase';
 
 interface OTPProps {
+  email: string;
   onOTPSuccess: () => void;
   onNavigateBack: () => void;
 }
 
-export const OTP: React.FC<OTPProps> = ({ onOTPSuccess, onNavigateBack }) => {
+export const OTP: React.FC<OTPProps> = ({ email, onOTPSuccess, onNavigateBack }) => {
   const [otpCode, setOtpCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+
+  const handleVerify = async () => {
+    if (!otpCode.trim() || otpCode.trim().length !== 6) {
+      Alert.alert('Validation Error', 'Please enter a valid 6-digit verification code.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await verifyOTP(email, otpCode.trim());
+      onOTPSuccess();
+    } catch (err: any) {
+      Alert.alert('Verification Failed', err.message || 'An error occurred during verification.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setResending(true);
+    try {
+      await resendOTP(email);
+      Alert.alert('Success', 'Verification code has been resent to your email.');
+    } catch (err: any) {
+      Alert.alert('Resend Failed', err.message || 'An error occurred while resending the code.');
+    } finally {
+      setResending(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -39,12 +71,19 @@ export const OTP: React.FC<OTPProps> = ({ onOTPSuccess, onNavigateBack }) => {
             
             <PrimaryButton
               title="Verify & Create Account"
-              onPress={onOTPSuccess}
+              onPress={handleVerify}
               style={styles.verifyButton}
+              loading={loading}
             />
             
-            <TouchableOpacity style={styles.resendButton}>
-              <Text style={styles.resendText}>Resend Code</Text>
+            <TouchableOpacity 
+              style={styles.resendButton} 
+              onPress={handleResend}
+              disabled={resending}
+            >
+              <Text style={[styles.resendText, resending && { opacity: 0.5 }]}>
+                {resending ? 'Resending...' : 'Resend Code'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

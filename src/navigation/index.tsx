@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Colors } from '../theme/colors';
 import { ScreenState } from '../types';
+import { supabase } from '../services/supabase';
 
 // Screen Imports
 import Splash from '../screens/Splash';
@@ -31,6 +32,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 export const RootNavigator: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('splash');
   const [selectedModel, setSelectedModel] = useState<string>('ChatGPT-4o');
+  const [tempEmail, setTempEmail] = useState<string>('');
   
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -49,6 +51,42 @@ export const RootNavigator: React.FC = () => {
       }).start();
     });
   }, [fadeAnim]);
+
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setCurrentScreen('home');
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        // If we are already logged in and on a dashboard screen, do nothing
+        setCurrentScreen((prev) => {
+          const authenticatedScreens = ['home', 'chat', 'imageGenerator', 'tools', 'history', 'profile', 'subscription'];
+          if (!authenticatedScreens.includes(prev)) {
+            // Trigger transition to home asynchronously to avoid state-update warnings
+            setTimeout(() => transitionTo('home'), 0);
+          }
+          return prev;
+        });
+      } else {
+        // If logged out and not already on auth/onboarding screens, redirect to login
+        setCurrentScreen((prev) => {
+          const authOnboardingScreens = ['splash', 'onboarding1', 'onboarding2', 'onboarding3', 'login', 'signup', 'otp'];
+          if (!authOnboardingScreens.includes(prev)) {
+            setTimeout(() => transitionTo('login'), 0);
+          }
+          return prev;
+        });
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [transitionTo]);
 
   const handleSelectModel = (modelName: string) => {
     setSelectedModel(modelName);
@@ -91,13 +129,17 @@ export const RootNavigator: React.FC = () => {
       case 'signup':
         return (
           <Signup 
-            onSignupSuccess={() => transitionTo('otp')} 
+            onSignupSuccess={(email) => {
+              setTempEmail(email);
+              transitionTo('otp');
+            }} 
             onNavigateToLogin={() => transitionTo('login')}
           />
         );
       case 'otp':
         return (
           <OTP 
+            email={tempEmail}
             onOTPSuccess={() => transitionTo('home')} 
             onNavigateBack={() => transitionTo('signup')}
           />
